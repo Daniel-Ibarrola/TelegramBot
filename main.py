@@ -10,9 +10,37 @@ import socket
 import signal
 import sys
 import re
+from utils import get_ftp_login_data
 from ftpserver import upload_file_to_ftp
-from bot import telegram_chatbot
+from bot import telegramBot
 
+# Socket variables
+IP = '127.0.0.1'
+try:
+    PORT = int(sys.argv[1])
+except:
+    PORT = 13384
+
+if PORT == 13385:
+    bot = telegramBot.cires_bot()
+else:
+    bot = telegramBot.test_bot()
+
+# Groups
+groups = {
+    '13384': ['RACM', -1001139087723],
+    '13385': ['SASMEX', -467285177], 
+    }
+group_id = groups[str(PORT)][1]
+
+# Connection status
+counter = 2
+connected = False
+# FTP access info
+user, pasword = get_ftp_login_data()
+# Other options
+display_data = False
+# Logging
 logger = logging.getLogger(__name__)
 
 # if sys.frozen == "windows_exe":
@@ -67,6 +95,7 @@ class ConsoleUi:
         self.frame.after(100, self.poll_log_queue)
 
 class OptionsUi:
+    """ Class that handles the checkbox button, and thte status light."""
 
     def __init__(self, frame):
         self.frame = frame
@@ -113,7 +142,7 @@ class OptionsUi:
 
 
 class App:
-
+    """ Main class fot the GUI."""
     def __init__(self, root):
         self.root = root
         root.title("Envío Telegram 2.2.1")
@@ -143,12 +172,13 @@ class App:
         self.root.destroy()
 
 def set_group_id(port):
+    """ Change the group id"""
     global group_id
     group_id = groups[str(port)][1]
     logger.log(logging.INFO, f'Grupo: {groups[str(port)][0]}')
 
 def set_display():
-    """Function to show/hide text to the console """
+    """Function to show/hide text to the console."""
     global display_data
     display_data = not display_data
 
@@ -355,6 +385,18 @@ def watch_dog():
 
 def main():
     global app
+    global connected
+    global connection_failed
+    
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((IP, PORT))
+        connected = True
+        connection_failed = False # Variable to know if the socket connected at the start of the program
+    except:
+        logger.log(logging.INFO, 'Error al conectarse')
+        connection_failed = True
+    
     logging.basicConfig(level=logging.INFO)
     root = tk.Tk()
     app = App(root)
@@ -376,39 +418,4 @@ def main():
 
 
 if __name__ == '__main__':
-
-    user = 'pga_pico@uis.unam.mx'
-    password = 'C8ToQa2ac'
-
-    groups = {'13384': ['RACM', -1001139087723], '13385': ['SASMEX', -467285177], }
-
-    IP = '127.0.0.1'
-    try:
-        PORT = int(sys.argv[1])
-    except:
-        PORT = 13384
-
-    if PORT == 13385:
-        # Cires Bot
-        bot = telegram_chatbot("config_2.cfg")
-    else:
-        # Test Bot
-        bot = telegram_chatbot("config_1.cfg")
-
-    group_id = groups[str(PORT)][1]
-
-    display_data = False
-    counter = 2
-    connected = False
-
-    try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((IP, PORT))
-        connected = True
-        connection_failed = False # Variable to know if the socket connected at the start of the program
-    except:
-        logger.log(logging.INFO, 'Error al conectarse')
-        connection_failed = True
-        pass
-
     main()
