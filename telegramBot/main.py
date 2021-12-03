@@ -1,48 +1,37 @@
-import tkinter as tk
-import tkinter.scrolledtext as tkscrolled
-import os
-import threading
-import queue
-import time
+### Program to send messages to telegram using a bot
+
+# Standard library
 import datetime
 import logging
-import socket
-import signal
-import sys
+import os
+import queue
 import re
-from utils import get_ftp_login_data
-from ftpserver import upload_file_to_ftp
-from bot import telegramBot
+import signal
+import socket
+import sys
+import time
+import threading
+import tkinter as tk
+import tkinter.scrolledtext as tkscrolled
+# telegramBot
+from telegramBot.bot.bot import telegramBot
+from telegramBot.ftp.ftpserver import upload_file_to_ftp
+import telegramBot.utils.utils as utils
 
-# Socket variables
-IP = '127.0.0.1'
-try:
-    PORT = int(sys.argv[1])
-except:
-    PORT = 13384
-
-if PORT == 13385:
-    bot = telegramBot.cires_bot()
-else:
-    bot = telegramBot.test_bot()
-
-# Groups
-groups = {
-    '13384': ['RACM', -1001139087723],
-    '13385': ['SASMEX', -467285177], 
-    }
-group_id = groups[str(PORT)][1]
 
 # Connection status
 counter = 2
 connected = False
 # FTP access info
-user, pasword = get_ftp_login_data()
+user, password = utils.get_ftp_login_data()
 # Other options
 display_data = False
 # Logging
 logger = logging.getLogger(__name__)
+# Data queue
+data_queue = queue.Queue()
 
+## Uncomment this lines when creating the executable file.
 # if sys.frozen == "windows_exe":
 #     sys.stderr._error = "inhibit log creation"
 
@@ -171,12 +160,6 @@ class App:
     def quit(self, *args):
         self.root.destroy()
 
-def set_group_id(port):
-    """ Change the group id"""
-    global group_id
-    group_id = groups[str(port)][1]
-    logger.log(logging.INFO, f'Grupo: {groups[str(port)][0]}')
-
 def set_display():
     """Function to show/hide text to the console."""
     global display_data
@@ -226,18 +209,9 @@ def send_message():
             time.sleep(2)
 
 def rcv_message():
-    """Receives data from the server. If it recieves  15,5 alert, it downloads a file form ftp server,
-        writes the data to a text file and sends a photo trough telegram"""
+    """ Receives data from the server and puts it in a queue."""
     global client_socket
-    global sending_image
-    global counter
-    global app
-    global user
-    global password
-    global PORT
-    writing_to_file = False
-    message = '23,4,Recibido' + '\r\n'
-    message = message.encode('utf-8')
+    
     while True:
         try:
             data = client_socket.recv(512)
@@ -245,104 +219,127 @@ def rcv_message():
             if (len(data) < 1):
                 time.sleep(2)
                 continue
-
-            if display_data:
-                logger.log(logging.INFO, data.decode())
-
-            if 'Hola' in data.decode():
-                counter = 0
-
-            if '23,0,' in data.decode():
-                # Send Message
-                logger.log(logging.INFO, data.decode())
-                msg = data.decode().split('23,0,')[1]
-                # bot.send_message(msg, group_id)
-                bot.send_message(msg, -373994761)
-                logger.log(logging.INFO, 'Mensaje enviado: ' + msg)
-
-            if '23,1,' in data.decode():
-                # Send image 1
-                logger.log(logging.INFO, data.decode())
-                path = data.decode().split('23,1,')[1]
-                path = re.search(pattern, path)
-                logger.log(logging.INFO, path)
-                try:
-                    bot.send_photo(path, -373994761)
-                    logger.log(logging.INFO, 'Imagen 1 enviada por Telegram\n')
-                    counter = 0
-                except Exception as e:
-                    logger.log(logging.INFO, "No se pudo enviar la primer imagen\n")
-                    logger.log(logging.INFO, e)
-
-            if '23,2,' in data.decode():
-                # Send image 2
-                print(data.decode())
-                path = data.decode().split('23,2,')[1]
-                path = re.search(pattern, path)
-                logger.log(logging.INFO, path)
-                try:
-                    bot.send_photo(path, -373994761)
-                    logger.log(logging.INFO, 'Imagen 2 enviada por Telegram\n')
-                    counter = 0
-                except:
-                    logger.log(logging.INFO, "No se pudo enviar la segunda imagen\n")
-
-            if '23,3,' in data.decode():
-                # Confirm connection
-                app.blink()
-
-            if PORT == 13384:
-
-                if '23,4,' in data.decode() and not writing_to_file:
-                    logger.log(logging.INFO, "Escribiendo Archivo...")
-                    writing_to_file = True
-                    line = data.decode().split('23,4,')[1]
-                    line = line.rstrip()
-                    line += '\n'
-                    filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.txt'
-                    file = open(filename, "w")
-                    file.write(line)
-                    client_socket.send(message)
-                    continue
-
-                if '23,4,' in data.decode() and writing_to_file:
-                    line = data.decode().split('23,4,')[1]
-                    line = line.rstrip()
-                    line += '\n'
-                    file.write(line)
-                    client_socket.send(message)
-
-                if '23,5,' in data.decode():
-                    logger.log(logging.INFO, data.decode())
-                    new_filename = data.decode().split('23,5,')[1]
-                    new_filename = new_filename.rstrip()
-                    file.close()
-                    os.rename(filename, new_filename)
-                    logger.log(logging.INFO, "Archivo completado\n")
-                    writing_to_file = False
-                    try:
-                        # upload_file_to_ftp(user, password, new_filename)
-                        logger.log(logging.INFO, "Archivo subido con éxito")
-                    except Exception as e:
-                        logger.log(logging.INFO, e)
-                        logger.log(logging.INFO, "No se pudo subir el archivo")
+            
+            data_queue.put(data)
+          
         except:
             time.sleep(2)
 
+def process_data():
+    """ Process incoming data from the server.
+
+    """
+    global client_socket
+    global sending_image
+    global counter
+    global app
+    global user
+    global password
+    global PORT
+    
+    writing_to_file = False
+    message = '23,4,Recibido' + '\r\n'
+    message = message.encode('utf-8')
+    # Regular expression to find image paths
+    pattern = r"(C|D):.+\.(jpg|png)"
+    while True:
+        
+        data = data_queue.get().decode()
+
+        if display_data:
+            logger.log(logging.INFO, data)
+
+        if 'Hola' in data:
+            counter = 0
+
+        if '23,0,' in data:
+            # Send Message
+            logger.log(logging.INFO, data)
+            msg = data.split('23,0,')[1]
+            bot.send_message(msg, group_id)
+            logger.log(logging.INFO, 'Mensaje enviado: ' + msg)
+
+        if '23,1,' in data:
+            # Send image 1
+            logger.log(logging.INFO, data)
+            path = data.split('23,1,')[1]
+            path = re.search(pattern, path)
+            logger.log(logging.INFO, path)
+            try:
+                bot.send_photo(path, group_id)
+                logger.log(logging.INFO, 'Imagen 1 enviada por Telegram\n')
+                counter = 0
+            except Exception as e:
+                logger.log(logging.WARNING, "No se pudo enviar la primer imagen\n")
+                logger.log(logging.WARNING, e)
+
+        if '23,2,' in data:
+            # Send image 2
+            print(data)
+            path = data.split('23,2,')[1]
+            path = re.search(pattern, path)
+            logger.log(logging.INFO, path)
+            try:
+                bot.send_photo(path, group_id)
+                logger.log(logging.WARNING, 'Imagen 2 enviada por Telegram\n')
+                counter = 0
+            except:
+                logger.log(logging.WARNING, "No se pudo enviar la segunda imagen\n")
+
+        if '23,3,' in data:
+            # Confirm connection
+            app.blink()
+
+        if PORT == 13384:
+
+            if '23,4,' in data and not writing_to_file:
+                logger.log(logging.INFO, "Escribiendo Archivo...")
+                writing_to_file = True
+                line = data.split('23,4,')[1]
+                line = line.rstrip()
+                line += '\n'
+                filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.txt'
+                file = open(filename, "w")
+                file.write(line)
+                client_socket.send(message)
+                continue
+
+            if '23,4,' in data and writing_to_file:
+                line = data.split('23,4,')[1]
+                line = line.rstrip()
+                line += '\n'
+                file.write(line)
+                client_socket.send(message)
+
+            if '23,5,' in data:
+                logger.log(logging.INFO, data)
+                new_filename = data.split('23,5,')[1]
+                new_filename = new_filename.rstrip()
+                file.close()
+                os.rename(filename, new_filename)
+                logger.log(logging.INFO, "Archivo completado\n")
+                writing_to_file = False
+                try:
+                    upload_file_to_ftp(user, password, new_filename)
+                    logger.log(logging.INFO, "Archivo subido con éxito")
+                except Exception as e:
+                    logger.log(logging.WARNING, e)
+                    logger.log(logging.WARNING, "No se pudo subir el archivo")
+      
+
 def watch_dog():
     """Keeps track of the counter variable. If it passes a certain treshold, it raises an alert"""
-    global counter
-    global connected
     global app
-    global connection_failed
     global client_socket
-
+    global connected
+    global connection_failed
+    global counter
+    
     if not connection_failed:
         app.change_color()
 
-    # logger.log(logging.INFO, f'IP: {IP}')
-    logger.log(logging.INFO, f'Id: {PORT}\n')
-    logger.log(logging.INFO, f'Grupo: {groups[str(PORT)][0]}\n')
+    logger.log(logging.INFO, f'ID: {PORT}\n')
+    logger.log(logging.INFO, f'Grupo: {group_name}\n')
 
     while True:
         # If it doesn't connect at start, try to connect again
@@ -363,9 +360,9 @@ def watch_dog():
             app.change_color()
             now = datetime.datetime.now()
             alert_message = 'Se perdio la conexión!\nTiempo: {}'.format(now.strftime("%H:%M:%S"))
-            logger.log(logging.INFO, alert_message)
+            logger.log(logging.WARNING, alert_message)
             counter = 0
-            logger.log(logging.INFO, '\nConexion perdida... reconectando')
+            logger.log(logging.WARNING, '\nConexion perdida... reconectando')
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             while not connected:
@@ -381,13 +378,29 @@ def watch_dog():
 
         time.sleep(30)
         counter += 1
-        print(counter)
 
 def main():
     global app
+    global bot
     global connected
     global connection_failed
+    global IP
+    global PORT
+    global group_id
+    global group_name
     
+    # Socket variables
+    IP = '127.0.0.1'
+    group_id, PORT = utils.get_group_and_port(sys.argv)
+    group_id_to_name = {id : name for name, id in utils.get_valid_groups().items()}
+    group_name = group_id_to_name[group_id].upper()
+    if group_name == "INFORMACION CIRES" or group_name == "SASMEX":
+        bot = telegramBot.cires_bot()
+    elif group_name == "RACM":
+        bot = telegramBot.test_bot()
+    else:
+        bot = telegramBot.myassistant_bot()
+        
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((IP, PORT))

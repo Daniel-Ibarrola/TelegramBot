@@ -34,8 +34,8 @@ class telegramBot():
         self.groups = {}
         
     @classmethod
-    def cires_bot(cls, token_file="./tokens.txt"):
-        """ Class method to create a bot with the usernmae @cires_bot
+    def cires_bot(cls, token_file="./data/tokens.txt"):
+        """ Class method to create a bot with the username CiresBot.
         
             Parameters
             ----------
@@ -46,8 +46,8 @@ class telegramBot():
         return cls(name, token)
     
     @classmethod
-    def test_bot(cls, token_file="./tokens.txt"):
-        """ Class method to create a bot with the usernmae @eatshit_bot
+    def test_bot(cls, token_file="./data/tokens.txt"):
+        """ Class method to create a bot with the usernmae Testbot.
         
             Parameters
             ----------
@@ -58,19 +58,19 @@ class telegramBot():
         return cls(name, token)
     
     @classmethod
-    def myassistant_bot(cls, token_file="./tokens.txt"):
-        """ Class method to create a bot with the usernmae @PulpoalaDiabla_bot
+    def myassistant_bot(cls, token_file="./data/tokens.txt"):
+        """ Class method to create a bot with the username MyAssistant.
             
             Parameters  
             ----------
             token_file : str
                 Path to the file containing the bots and tokens names.
         """
-        name, token = telegramBot.read_token("PulpoalaDiabla_bot", token_file)
+        name, token = telegramBot.read_token("my_assistant", token_file)
         return cls(name, token)
     
     @staticmethod
-    def read_token(bot_name, token_file="./tokens.txt"):
+    def read_token(bot_name, token_file="./data/tokens.txt"):
         """ Read a token from a text file.
             
             Parameters
@@ -80,6 +80,14 @@ class telegramBot():
             
             token_file : str
                 Path to the file containing the bots and tokens names.
+                
+            Returns
+            -------
+            name : str
+                The name of the bot
+            
+            token : str
+                The bot token.    
         """
         with open(token_file, "r") as fh:
             for line in fh:
