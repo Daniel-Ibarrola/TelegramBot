@@ -227,7 +227,6 @@ def rcv_message():
 
 def process_data():
     """ Process incoming data from the server.
-
     """
     global client_socket
     global sending_image
@@ -328,7 +327,10 @@ def process_data():
       
 
 def watch_dog():
-    """Keeps track of the counter variable. If it passes a certain treshold, it raises an alert"""
+    """ If conection is lost it reconnects. Also watches if all threads are still alive. 
+    
+        Keeps track of the counter variable. If it passes a certain treshold, it raises an alert
+    """
     global app
     global client_socket
     global connected
@@ -379,6 +381,15 @@ def watch_dog():
         time.sleep(30)
         counter += 1
 
+        # Check if threads are alive
+        if not t1.is_alive():
+            logging.warning(f"Send message thread is dead")
+        if not t2.is_alive():
+            logging.warning(f"Rcv message thread is dead")
+        if not t3.is_alive():
+            logging.warning(f"Process data thread is dead")
+        
+
 def main():
     global app
     global bot
@@ -388,6 +399,7 @@ def main():
     global PORT
     global group_id
     global group_name
+    global t1, t2, t3
     
     # Socket variables
     IP = '127.0.0.1'
@@ -414,17 +426,15 @@ def main():
     root = tk.Tk()
     app = App(root)
 
-    t1 = threading.Thread(target=send_message)
-    t2 = threading.Thread(target=rcv_message)
-    t3 = threading.Thread(target=watch_dog)
-
-    t1.daemon = True
-    t2.daemon = True
-    t3.daemon = True
+    t1 = threading.Thread(target=send_message, daemon=True)
+    t2 = threading.Thread(target=rcv_message, daemon=True)
+    t3 = threading.Thread(target=process_data, daemon=True)
+    t4 = threading.Thread(target=watch_dog, daemon=True)
 
     t1.start()
     t2.start()
     t3.start()
+    t4.start()
 
     app.root.mainloop()
     sys.exit()
