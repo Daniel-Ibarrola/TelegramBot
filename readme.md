@@ -2,7 +2,7 @@
 
 Telegram bot to send messages in real time.
 
-## Instalation
+## Installation
 
 First create a conda environment from the requiremnts.yaml file located in telegramBot/devtools:
 
@@ -25,10 +25,9 @@ First create a conda environment from the requirements.yaml file. Then go to the
 setup.py is installed and generate the executable with the following command: 
 
 ```bash
-python setup.py install
+python setup.py py2exe
 ```
-A build and a dist directory will be created. Delete the build directory. Then, copy the following folders into the dist
-directory: bot, ftp, utils, data, as well as the __init__.py located in telegramBot.  
+A dist directory will be created. Copy the following folders into the dist directory: bot, ftp, utils, data, as well as the __init__.py located in telegramBot. You can optionally change the name of the dist directory to something like "TelBot".  
 
 ## Passing arguments to the program
 The program accepts two arguments which are port number and the name of the telegram group where the 
@@ -38,7 +37,17 @@ messages will be send. For example if the program is run from a command line and
 ```bash
 python main.py 13385 "informacion cires"
 ```
-Alternatively the extra arguments can be passed from a direct access to the executable. The casing of
-the group name doesn't matter.
 
-The default port is 13385 and the default group is SASMEX.
+The casing of the group name doesn't matter.
+
+Alternatively the extra arguments can be passed from a direct access to the executable like in the image:
+
+<img src="./telegramBot/data/ciresbot.JPG" alt="direct-access-image"/>
+
+The default port is 13384 and the default group is grupo_prueba2.
+
+Valid group names are:
+- Informacion CIRES
+- RACM
+- SASMEX
+- Grupo_prueba2

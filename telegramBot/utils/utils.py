@@ -1,4 +1,5 @@
-from telegramBot.utils.exceptions import InvalidPortError, InvalidGroupError
+from utils.exceptions import InvalidPortError, InvalidGroupError
+import re
 
 def validate_port(port):
     """ Validate a port number
@@ -162,3 +163,22 @@ def get_group_and_port(argvs, groups_file="./data/chats.txt"):
         group_id = get_default_group_id(groups_file)
     
     return group_id, port
+
+
+def extract_path(data):
+    """ Extract an image path from a data string recieved from the racdmx server.
+
+        Parameters
+        ----------
+        data : str
+            The data string.
+
+        Returns
+        -------
+        str
+            The path to the image.
+    """
+    pattern = r"(C|D):.+\.(jpg|png)"
+    path = data.split('23,1,')[1]
+    path = re.search(pattern, path)
+    return path.group(0) 

@@ -1,9 +1,9 @@
-import telegramBot.bot.bot
-import telegramBot.ftp.ftpserver
-import telegramBot.utils.utils
-import telegramBot.utils.exceptions
+import bot.bot as telbot
+import ftp.ftpserver
+import utils.utils
+import utils.exceptions
 
 def test_import():
 
-    bot = telegramBot.bot.bot.telegramBot("my-bot", "123efdsa21")
-    assert isinstance(bot, telegramBot.bot.bot.telegramBot )
+    bot = telbot.telegramBot("my-bot", "123efdsa21")
+    assert isinstance(bot, bot.bot.telegramBot )

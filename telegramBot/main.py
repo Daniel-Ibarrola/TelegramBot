@@ -14,9 +14,13 @@ import threading
 import tkinter as tk
 import tkinter.scrolledtext as tkscrolled
 # telegramBot
-from telegramBot.bot.bot import telegramBot
-from telegramBot.ftp.ftpserver import upload_file_to_ftp
-import telegramBot.utils.utils as utils
+from bot.bot import telegramBot
+from ftp.ftpserver import upload_file_to_ftp
+import utils.utils as utils
+
+## Uncomment this lines when creating the executable file.
+if sys.frozen == "windows_exe":
+    sys.stderr._error = "inhibit log creation"
 
 
 # Connection status
@@ -30,10 +34,6 @@ display_data = False
 logger = logging.getLogger(__name__)
 # Data queue
 data_queue = queue.Queue()
-
-## Uncomment this lines when creating the executable file.
-# if sys.frozen == "windows_exe":
-#     sys.stderr._error = "inhibit log creation"
 
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue.
@@ -73,7 +73,7 @@ class ConsoleUi:
         self.scrolled_text.yview(tk.END)
 
     def poll_log_queue(self):
-        # Check every 100ms if there is a new message in the queue to display
+        """Checks every 100ms if there is a new message in the queue to display"""
         while True:
             try:
                 record = self.log_queue.get(block=False)
@@ -84,7 +84,7 @@ class ConsoleUi:
         self.frame.after(100, self.poll_log_queue)
 
 class OptionsUi:
-    """ Class that handles the checkbox button, and thte status light."""
+    """ Class that handles the checkbox button, and the status light."""
 
     def __init__(self, frame):
         self.frame = frame
@@ -226,7 +226,18 @@ def rcv_message():
             time.sleep(2)
 
 def process_data():
-    """ Process incoming data from the server.
+    """ Process incoming data from the server. Sends messages and/or images according to
+        the code recieved from the server. Also uploads a file to the ftp server if the 
+        code to do so is received.
+
+        The codes are the following:
+
+        23,0 : indicates that a text message must be sent.
+        23,1 : code to send an image (mapa racdmx).
+        23,2 : code to send an image (mapa mex).
+        23,3 : confirms the connection with the server
+        23,4 : indicates that a .dat file is going to be written using incoming data
+        23,5 : code to upload the .dat file to the ftp server. 
     """
     global client_socket
     global sending_image
@@ -240,7 +251,6 @@ def process_data():
     message = '23,4,Recibido' + '\r\n'
     message = message.encode('utf-8')
     # Regular expression to find image paths
-    pattern = r"(C|D):.+\.(jpg|png)"
     while True:
         
         data = data_queue.get().decode()
@@ -253,37 +263,27 @@ def process_data():
 
         if '23,0,' in data:
             # Send Message
-            logger.log(logging.INFO, data)
             msg = data.split('23,0,')[1]
             bot.send_message(msg, group_id)
             logger.log(logging.INFO, 'Mensaje enviado: ' + msg)
 
-        if '23,1,' in data:
-            # Send image 1
-            logger.log(logging.INFO, data)
-            path = data.split('23,1,')[1]
-            path = re.search(pattern, path)
-            logger.log(logging.INFO, path)
+        if '23,1,' in data or '23,2,' in data:
+            # Send an image
+            path = utils.extract_path(data)
             try:
                 bot.send_photo(path, group_id)
-                logger.log(logging.INFO, 'Imagen 1 enviada por Telegram\n')
+                if '23,1' in data:
+                    logger.log(logging.INFO, 'Mapa RACDMX enviado por Telegram\n')
+                else:
+                    logger.log(logging.INFO, 'Mapa de sismo enviado por Telegram\n')
                 counter = 0
             except Exception as e:
-                logger.log(logging.WARNING, "No se pudo enviar la primer imagen\n")
+                if '23,1' in data:
+                    logger.log(logging.WARNING, 'Falló envio de mapa RACDMX\n')
+                else:
+                    logger.log(logging.WARNING, 'Falló envio mapa de sismo enviado por Telegram')
                 logger.log(logging.WARNING, e)
 
-        if '23,2,' in data:
-            # Send image 2
-            print(data)
-            path = data.split('23,2,')[1]
-            path = re.search(pattern, path)
-            logger.log(logging.INFO, path)
-            try:
-                bot.send_photo(path, group_id)
-                logger.log(logging.WARNING, 'Imagen 2 enviada por Telegram\n')
-                counter = 0
-            except:
-                logger.log(logging.WARNING, "No se pudo enviar la segunda imagen\n")
 
         if '23,3,' in data:
             # Confirm connection
@@ -327,7 +327,7 @@ def process_data():
       
 
 def watch_dog():
-    """ If conection is lost it reconnects. Also watches if all threads are still alive. 
+    """ If conection is lost it reconnects. Also veryfies if threads are still alive. 
     
         Keeps track of the counter variable. If it passes a certain treshold, it raises an alert
     """
@@ -340,7 +340,7 @@ def watch_dog():
     if not connection_failed:
         app.change_color()
 
-    logger.log(logging.INFO, f'ID: {PORT}\n')
+    logger.log(logging.INFO, f'Puerto: {PORT}')
     logger.log(logging.INFO, f'Grupo: {group_name}\n')
 
     while True:
@@ -383,16 +383,23 @@ def watch_dog():
 
         # Check if threads are alive
         if not t1.is_alive():
-            logging.warning(f"Send message thread is dead")
+            logger.log(logging.WARNING, "Send message thread is dead")
         if not t2.is_alive():
-            logging.warning(f"Rcv message thread is dead")
+            logger.log(logging.WARNING, "Rcv message thread is dead")
         if not t3.is_alive():
-            logging.warning(f"Process data thread is dead")
+            logger.log(logging.WARNING, "Process data thread is dead")
         
 
 def main():
+    """ Main function. Starts the threads and the gui. 
+
+        At the beginning it retrieves the port and group from argvs and instansiates
+        the bot and the socket.
+
+    """
     global app
     global bot
+    global client_socket
     global connected
     global connection_failed
     global IP
