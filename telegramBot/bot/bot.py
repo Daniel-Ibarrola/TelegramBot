@@ -1,6 +1,9 @@
 import requests
 import json
 
+class NoUpdatesError(ValueError):
+    pass
+
 class telegramBot():
     """ Class to work with Telegram bots.
     
@@ -35,7 +38,7 @@ class telegramBot():
         
     @classmethod
     def cires_bot(cls, token_file="./data/tokens.txt"):
-        """ Class method to create a bot with the username CiresBot.
+        """ Class method to create a bot with the username ciresBot.
         
             Parameters
             ----------
@@ -43,6 +46,30 @@ class telegramBot():
                 Path to the file containing the bots and tokens names.
         """
         name, token = telegramBot.read_token("cires_bot", token_file)
+        return cls(name, token)
+    
+    @classmethod
+    def cires_bot_2(cls, token_file="./data/tokens.txt"):
+        """ Class method to create a bot with the username CiresBot2.
+        
+            Parameters
+            ----------
+            token_file : str
+                Path to the file containing the bots and tokens names.
+        """
+        name, token = telegramBot.read_token("cires_2_bot", token_file)
+        return cls(name, token)
+    
+    @classmethod
+    def cires_bot_3(cls, token_file="./data/tokens.txt"):
+        """ Class method to create a bot with the username CiresBot3.
+        
+            Parameters
+            ----------
+            token_file : str
+                Path to the file containing the bots and tokens names.
+        """
+        name, token = telegramBot.read_token("cires_3_bot", token_file)
         return cls(name, token)
     
     @classmethod
@@ -97,6 +124,28 @@ class telegramBot():
                     token = pieces[-1].rstrip()
                     return name, token
     
+    @staticmethod
+    def get_bot_dictionary(token_file="./data/tokens.txt"):
+        """ Get a dictionary with valid bot names and its tokens.
+        
+            Parameters
+            ----------
+            token_file : str
+                Path to the file containing the bots and tokens names.
+                
+            Returns
+            -------
+            bots : dict
+                Dictionary with bot names ans keys and tokens as values.
+
+        """
+        bots = {}
+        with open(token_file, "r") as fh:
+            for line in fh:
+                name_and_token = line.split()
+                bots[name_and_token[0]] = name_and_token[1]
+        return bots
+
     def get_updates(self, offset=None):
         """ Get updates for the current bot. 
         
@@ -107,13 +156,15 @@ class telegramBot():
         res = requests.get(url)
         if res.status_code != 200:
             raise IOError("Couldn't get updates")
-        
+
         return json.loads(res.content)
 
     def get_groups_dictionary(self):
-        """ Get a dictionary with the names and ids of the groups to which this bot belings to.
+        """ Get a dictionary with the names and ids of the groups to which this bot belongs to.
         """
         updates = self.get_updates()
+        if len(updates["result"]) == 0:
+            raise NoUpdatesError()
         for update in updates["result"]:
             try:
                 group_name = update["message"]["chat"]["title"]

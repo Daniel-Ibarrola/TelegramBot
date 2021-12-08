@@ -3,3 +3,6 @@ class InvalidPortError(ValueError):
 
 class InvalidGroupError(ValueError):
     pass
+
+class InvalidBotName(ValueError):
+    pass

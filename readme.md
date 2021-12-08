@@ -22,7 +22,7 @@ Alternatively an executable file can be created.
 ## How to create an executable 
 
 First create a conda environment from the requirements.yaml file. Then go to the folder where 
-setup.py is installed and generate the executable with the following command: 
+setup.py is located and generate the executable with the following command: 
 
 ```bash
 python setup.py py2exe
@@ -51,3 +51,27 @@ Valid group names are:
 - RACM
 - SASMEX
 - Grupo_prueba2
+
+## Adding a new bot
+To add a new bot, first create a bot in telegram and make sure to turn off group privacy settings for the bot. 
+To turnoff privacy setting go to botfather then group settings and finally Group Privacy.
+
+Then, save the token and bot name in the file tokens.txt located in data.
+
+## Adding a new group
+To add a new group, first create a group in Telegram Then, add the bot to the group and send a message to the group. Then run the get_groups.py script to get the id of the groups that the bot belongs to:
+
+```bash
+python get_groups.py bot_name
+```
+
+Copy the name an id of the group and add it to the chats.txt file located in data.
+
+
+## Telegram Bot Limits
+
+When sending messages inside a particular chat, avoid sending more than one message per second. We may allow short bursts that go over this limit, but eventually you'll begin receiving 429 errors.
+
+If you're sending bulk notifications to multiple users, the API will not allow more than 30 messages per second or so. Consider spreading out notifications over large intervals of 8—12 hours for best results.
+
+Also note that your bot will not be able to send more than 20 messages per minute to the same group.

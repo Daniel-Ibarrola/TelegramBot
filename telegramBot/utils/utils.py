@@ -124,10 +124,11 @@ def get_default_group_id(groups_file="./data/chats.txt"):
             The default group id.
         
     """
-    default_idx = -1
+    default_group = "Grupo_prueba2"
     with open(groups_file, "r") as fh:
-        lines = fh.readlines()
-        return int(lines[default_idx].split(",")[-1])
+        for line in fh:
+            if line.startswith(default_group):
+                return int(line.split()[-1])
     
 
 def get_group_and_port(argvs, groups_file="./data/chats.txt"):

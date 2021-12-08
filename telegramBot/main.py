@@ -358,7 +358,6 @@ def watch_dog():
                     time.sleep(2)
 
         if counter > 2 and not connected:
-            # print('Contador mayor a 2')
             app.change_color()
             now = datetime.datetime.now()
             alert_message = 'Se perdio la conexión!\nTiempo: {}'.format(now.strftime("%H:%M:%S"))
@@ -418,7 +417,7 @@ def main():
     elif group_name == "RACM":
         bot = telegramBot.test_bot()
     else:
-        bot = telegramBot.myassistant_bot()
+        bot = telegramBot.cires_bot_2()
         
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
