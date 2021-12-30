@@ -3,23 +3,36 @@ from utils.exceptions import InvalidBotName
 
 
 def main():
-    bot_name = input("Enter bot name: ")
-    bot_dict = telegramBot.get_bot_dictionary()
-    try:
-        bot = telegramBot(bot_name, bot_dict[bot_name])
-    except KeyError:
-        raise InvalidBotName(f"{bot_name} is not a valid bot name")
 
-    #print(bot.base_url)
+    bots = telegramBot.get_bot_dictionary()
+    names = list(bots.keys())
+
+    while True:
+        bot_name = input("Enter bot name: ")
+        if bot_name not in bots.keys():
+            print(f"Bot invalido. Elegir uno de los sugioentes bots: {names}")
+        else:
+            break
+
+    try:
+        token = bots[bot_name]
+    except KeyError:
+        raise InvalidBotName(f"{bot_name} no es un nombre de bot valido.")
+   
+    bot = telegramBot(bot_name,token)
+
     try:
         bot.get_groups_dictionary()
     except NoUpdatesError:
-        print(f"No updates for {bot.name}. Cannot get groups id's. Try again later")
+        print(f"No hay actualizaciones para {bot.name}. Intente otra vez más tarde.")
         return
     
-    print(f"{bot.name} belongs to the following groups:\n")
-    for gr, id in bot.groups.items():
-        print(f"Grupo: {gr} ID: {id}")
+    print(f"Se encontraron actualizaciones para los siguientes grupos:\n")
+    with open(f"{bot.name}_grupos.txt", "w") as fp:
+        for gr, id in bot.groups.items():
+            line = f"Grupo: {gr} ID: {id}\n"
+            fp.write(line)
+            print(line)
     
 
 if __name__=="__main__":
