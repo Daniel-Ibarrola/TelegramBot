@@ -54,18 +54,18 @@ Valid group names are:
 
 ## Adding a new bot
 To add a new bot, first create a bot in telegram and make sure to turn off group privacy settings for the bot. 
-To turnoff privacy setting go to botfather then group settings and finally Group Privacy.
+To turn off privacy setting go to botfather then group settings and finally Group Privacy.
 
 Then, save the token and bot name in the file tokens.txt located in data.
 
 ## Adding a new group
-To add a new group, first create a group in Telegram Then, add the bot to the group and send a message to the group. Then run the get_groups.py script to get the id of the groups that the bot belongs to:
+To add a new group, first create a group in Telegram. Then, add the bot to the group and send a message to the group. Then run the get_groups.py script to get the id of the groups that the bot belongs to:
 
 ```bash
 python get_groups.py bot_name
 ```
 
-Copy the name an id of the group and add it to the chats.txt file located in data.
+Copy the name and id of the group as well as the bot name and add it to the chats.txt file located in data.
 
 
 ## Telegram Bot Limits

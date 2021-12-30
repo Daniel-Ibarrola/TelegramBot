@@ -1,4 +1,5 @@
 *.txt
+*.csv
 /.ipynb_checkpoints
 __pycache__/
 dist/

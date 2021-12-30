@@ -1,4 +1,5 @@
 from utils.exceptions import InvalidPortError, InvalidGroupError
+from collections import namedtuple
 import re
 
 def validate_port(port):
@@ -74,14 +75,17 @@ def get_valid_groups(groups_file="./data/chats.txt"):
             Dictionary with group names as keys and ids as values.
     """
     valid_groups = {}
+    GroupInfo = namedtuple("GroupInfo", ["group_id", "bot_name"])
     
     with open(groups_file, "r") as fh:
-        for line in fh.readlines():
+        fh.readline() # skip header
+        for line in fh:
             chat_info = line.split(",")
             group_name = chat_info[0].lower()
-            group_id = int(chat_info[-1].rstrip())
-            valid_groups[group_name] = group_id
-    
+            group_id = int(chat_info[1])
+            bot_name = chat_info[-1].rstrip()
+            valid_groups[group_name] = GroupInfo(group_id=group_id, bot_name=bot_name)
+
     return valid_groups
 
 
@@ -108,8 +112,8 @@ def get_ftp_login_data(ftp_file="./data/ftp.txt"):
 
     return user, password
 
-def get_default_group_id(groups_file="./data/chats.txt"):
-    """ Get the default group id.
+def get_default_group(groups_file="./data/chats.txt"):
+    """ Get the default group info.
     
         This function is used in case a group was not passed as an argv.
         
@@ -120,18 +124,28 @@ def get_default_group_id(groups_file="./data/chats.txt"):
         
         Returns
         -------
-        int
-            The default group id.
+        group_name : str
+            Name of the group
+
+        group_id : int
+            Id of the telegram group.
+
+        bot_name : str
+            Name of the bot assosciated with the group.
         
     """
     default_group = "Grupo_prueba2"
     with open(groups_file, "r") as fh:
         for line in fh:
             if line.startswith(default_group):
-                return int(line.split()[-1])
+                splitted_line = line.split()
+                group_name = splitted_line[0]
+                group_id = int(splitted_line[1])
+                bot_name = splitted_line[-1]
+                return group_name, group_id, bot_name
     
 
-def get_group_and_port(argvs, groups_file="./data/chats.txt"):
+def get_group_port_and_bot(argvs, groups_file="./data/chats.txt"):
     """ Get port number and group id from argvs passed to the program.
 
         Parameters
@@ -144,26 +158,35 @@ def get_group_and_port(argvs, groups_file="./data/chats.txt"):
             
         Returns
         -------
+        group_name : str
+            Name of the group
+
+        group_id : int
+            Id of the telegram group.
+
+        bot_name : str
+            Name of the bot assosciated with the group.
+
         port : int
             The port number
         
-        group : int
-            Id of the telegram group.
+        
     """
     if len(argvs) == 3:
         port  = validate_port(argvs[1])
         valid_groups = get_valid_groups(groups_file)
         group_name = validate_group(argvs[2], list(valid_groups.keys()))
-        group_id = valid_groups[group_name]
+        group_id = valid_groups[group_name].group_id
+        bot_name = valid_groups[group_name].bot_name
     
     elif len(argvs) == 2:
         port  = validate_port(argvs[1])
-        group_id = get_default_group_id(groups_file)
+        group_name, group_id, bot_name = get_default_group(groups_file)
     else:
         port = 13384
-        group_id = get_default_group_id(groups_file)
+        group_name, group_id, bot_name = get_default_group(groups_file)
     
-    return group_id, port
+    return group_name, group_id, bot_name, port
 
 
 def extract_path(data):

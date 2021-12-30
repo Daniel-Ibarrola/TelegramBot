@@ -409,15 +409,10 @@ def main():
     
     # Socket variables
     IP = '127.0.0.1'
-    group_id, PORT = utils.get_group_and_port(sys.argv)
-    group_id_to_name = {id : name for name, id in utils.get_valid_groups().items()}
-    group_name = group_id_to_name[group_id].upper()
-    if group_name == "INFORMACION CIRES" or group_name == "SASMEX":
-        bot = telegramBot.cires_bot()
-    elif group_name == "RACM":
-        bot = telegramBot.test_bot()
-    else:
-        bot = telegramBot.cires_bot_2()
+    group_name, group_id, bot_name, PORT = utils.get_group_port_and_bot(sys.argv)
+    _, token = telegramBot.read_token(bot_name)
+
+    bot = telegramBot(bot_name, token)
         
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

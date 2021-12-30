@@ -17,9 +17,13 @@ def main():
     
     valid_groups = utils.get_valid_groups()
     group_name = utils.validate_group(sys.argv[2], list(valid_groups.keys()))
-    group_id = valid_groups[group_name]
     
-    bot = telegramBot.cires_bot_2()
+    group_id = valid_groups[group_name].group_id
+    bot_name = valid_groups[group_name].bot_name
+
+    _, token = telegramBot.read_token(bot_name)
+
+    bot = telegramBot(bot_name, token)
     bot.send_photo(file_path, group_id, print_res=True)
 
 if __name__=="__main__":
