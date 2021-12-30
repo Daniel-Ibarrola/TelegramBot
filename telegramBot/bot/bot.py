@@ -164,7 +164,7 @@ class telegramBot():
         """
         updates = self.get_updates()
         if len(updates["result"]) == 0:
-            raise NoUpdatesError()
+            raise NoUpdatesError("No updates were found. Try again later.")
         for update in updates["result"]:
             try:
                 group_name = update["message"]["chat"]["title"]
@@ -198,7 +198,7 @@ class telegramBot():
             
         """
         if not isinstance(msg, str):
-            raise TypeError("Mesage must be of type string")
+            raise TypeError("Message must be of type string")
         if not msg:
             raise ValueError("Message must not be an empty string")
     
@@ -208,7 +208,7 @@ class telegramBot():
         if res.status_code != 200:
             print(f"Failed to send message. Status code: {res.status_code}")
 
-    def send_photo(self, photo_path, chat_id, caption=""):
+    def send_photo(self, photo_path, chat_id, caption="", print_res=False):
         """ Send a photo with the bot.
 
             Parameters
@@ -221,6 +221,9 @@ class telegramBot():
             
             caption : str, optional
                 The caption of the photo.
+
+            print_res : bool
+                Whether to print the response returned by telegram
             
         """
         url = self.base_url + "sendPhoto?chat_id={}".format(chat_id)
@@ -233,6 +236,10 @@ class telegramBot():
         
         if res.status_code != 200:
             print(f"Failed to send photo. Status code: {res.status_code}")
+
+        if print_res:
+            success = json.loads(res.content)["ok"]
+            print(f"Send photo successfully: {success}")
 
     def send_document(self, doc_path, chat_id, caption=""):
         """ Send a document with the bot.

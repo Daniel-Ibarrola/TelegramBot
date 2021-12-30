@@ -27,7 +27,7 @@ setup.py is located and generate the executable with the following command:
 ```bash
 python setup.py py2exe
 ```
-A dist directory will be created. Copy the following folders into the dist directory: bot, ftp, utils, data, as well as the __init__.py located in telegramBot. You can optionally change the name of the dist directory to something like "TelBot".  
+A dist directory containing the executable will be created. Copy the following folders into the dist directory: bot, ftp, utils, data, as well as the __init__.py located in telegramBot. You can optionally change the name of the dist directory to something like "TelBot".  
 
 ## Passing arguments to the program
 The program accepts two arguments which are port number and the name of the telegram group where the 
