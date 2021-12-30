@@ -134,7 +134,7 @@ class App:
     """ Main class fot the GUI."""
     def __init__(self, root):
         self.root = root
-        root.title("Envío Telegram 2.2.1")
+        root.title("Envío Telegram 3.0.0")
         root.configure(background="#4B7398")
         root.rowconfigure(0, minsize=100, weight=1)
         root.columnconfigure(0, minsize=100, weight=1)
