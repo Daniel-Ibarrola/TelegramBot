@@ -18,10 +18,10 @@ from bot.bot import telegramBot
 from ftp.ftpserver import upload_file_to_ftp
 import utils.utils as utils
 
-## Uncomment this lines when creating the executable file.
-if sys.frozen == "windows_exe":
-    sys.stderr._error = "inhibit log creation"
-
+# Inhibit log file creation
+if getattr(sys, "frozen", False):
+    if sys.frozen == "windows_exe":
+        sys.stderr._error = "inhibit log creation"
 
 # Connection status
 counter = 2
@@ -409,8 +409,13 @@ def main():
     
     # Socket variables
     IP = '127.0.0.1'
-    group_name, group_id, bot_name, PORT = utils.get_group_port_and_bot(sys.argv)
-    _, token = telegramBot.read_token(bot_name)
+    if sys.argv:
+        group_name, group_id, bot_name, PORT = utils.get_group_port_and_bot(sys.argv)
+        print(bot_name)
+        _, token = telegramBot.read_token(bot_name)
+    else:
+        group_name, group_id, bot_name = utils.get_default_group()
+        PORT = 13384
 
     bot = telegramBot(bot_name, token)
         

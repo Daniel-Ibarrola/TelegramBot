@@ -105,7 +105,7 @@ class telegramBot():
             bot_name : str
                 The name of the bot in the token file.
             
-            token_file : str
+            token_file : str or os.path
                 Path to the file containing the bots and tokens names.
                 
             Returns
@@ -118,8 +118,8 @@ class telegramBot():
         """
         with open(token_file, "r") as fh:
             for line in fh:
-                if line.startswith(bot_name):
-                    pieces = line.split(" ")
+                if bot_name in line:
+                    pieces = line.split()
                     name = pieces[0].rstrip()
                     token = pieces[-1].rstrip()
                     return name, token

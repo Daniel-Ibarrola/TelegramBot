@@ -4,7 +4,7 @@ from distutils.core import setup
 import py2exe
 
 setup_dict = dict(
-    windows = [{'script': "get_groups.py",}],
+    console=[{'script': "get_groups.py"}],
 )
 
 setup(**setup_dict)

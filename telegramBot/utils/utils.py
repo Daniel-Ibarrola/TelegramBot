@@ -2,6 +2,7 @@ from utils.exceptions import InvalidPortError, InvalidGroupError
 from collections import namedtuple
 import re
 
+
 def validate_port(port):
     """ Validate a port number
     
@@ -138,10 +139,10 @@ def get_default_group(groups_file="./data/chats.txt"):
     with open(groups_file, "r") as fh:
         for line in fh:
             if line.startswith(default_group):
-                splitted_line = line.split()
+                splitted_line = line.split(",")
                 group_name = splitted_line[0]
                 group_id = int(splitted_line[1])
-                bot_name = splitted_line[-1]
+                bot_name = splitted_line[-1].rstrip()
                 return group_name, group_id, bot_name
     
 
