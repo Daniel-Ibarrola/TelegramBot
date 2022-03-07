@@ -136,7 +136,7 @@ class telegramBot():
             Returns
             -------
             bots : dict
-                Dictionary with bot names ans keys and tokens as values.
+                Dictionary with bot names as keys and tokens as values.
 
         """
         bots = {}
@@ -173,6 +173,22 @@ class telegramBot():
             except:
                 pass
 
+    def load_all_groups(self, groups_file="./data/chats.txt"):
+        """ Get a dictionary of telegram groups with its respective id.
+
+            Parmaters
+            ---------
+            groups_file : 
+                Name or path of the file that contains the group names an ids.    
+        """
+        with open(groups_file, "r") as fp:
+            fp.readline() # skip header
+            for line in fp:
+                chat_info = line.split(",")
+                group_name = chat_info[0].lower()
+                group_id = int(chat_info[1])
+                self.groups[group_name] = group_id
+               
     def get_bot_info(self):
         """ Get basic info of the current bot.
         
@@ -194,7 +210,12 @@ class telegramBot():
                 The message that will be send.
             
             chat_id : int or str
-                The id of the chat where the message will be send-
+                The id of the chat where the message will be send.
+
+            Returns
+            -------
+            status_code : int
+               The response status code
             
         """
         if not isinstance(msg, str):
@@ -204,9 +225,8 @@ class telegramBot():
     
         url = self.base_url + "sendMessage?chat_id={}&text={}".format(chat_id, msg)
         res = requests.get(url)
-        
-        if res.status_code != 200:
-            print(f"Failed to send message. Status code: {res.status_code}")
+
+        return res.status_code
 
     def send_photo(self, photo_path, chat_id, caption="", print_res=False):
         """ Send a photo with the bot.
@@ -225,6 +245,11 @@ class telegramBot():
             print_res : bool
                 Whether to print the response returned by telegram
             
+            Returns
+            -------
+            status_code : int
+               The response status code
+            
         """
         url = self.base_url + "sendPhoto?chat_id={}".format(chat_id)
         if caption:
@@ -233,13 +258,12 @@ class telegramBot():
             url += "&caption={}".format(caption)
         photo = {'photo': open(photo_path, 'rb')}
         res = requests.post(url, files=photo)
-        
-        if res.status_code != 200:
-            print(f"Failed to send photo. Status code: {res.status_code}")
 
         if print_res:
             success = json.loads(res.content)["ok"]
             print(f"Send photo successfully: {success}")
+        
+        return res.status_code      
 
     def send_document(self, doc_path, chat_id, caption=""):
         """ Send a document with the bot.
@@ -254,6 +278,11 @@ class telegramBot():
             
             caption : str, optional
                 The caption of the document.
+
+            Returns
+            -------
+            status_code : int
+               The response status code
             
         """
         url = self.base_url + "sendDocument?chat_id={}".format(chat_id)
@@ -263,7 +292,6 @@ class telegramBot():
             url += "&caption={}".format(caption)
         files = {'document': open(doc_path, 'rb')}
         res = requests.post(url, files=files)
-        
-        if res.status_code != 200:
-            print(f"Failed to send document. Status code: {res.status_code}")
+
+        return res.status_code
     

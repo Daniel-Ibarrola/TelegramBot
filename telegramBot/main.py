@@ -5,7 +5,6 @@ import datetime
 import logging
 import os
 import queue
-import re
 import signal
 import socket
 import sys
@@ -16,6 +15,7 @@ import tkinter.scrolledtext as tkscrolled
 # telegramBot
 from bot.bot import telegramBot
 from ftp.ftpserver import upload_file_to_ftp
+from send_logs import send_logs_telegram
 import utils.utils as utils
 
 # Inhibit log file creation
@@ -31,9 +31,15 @@ user, password = utils.get_ftp_login_data()
 # Other options
 display_data = False
 # Logging
+## Logging ## 
 logger = logging.getLogger(__name__)
+logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+fileHandler = logging.FileHandler("./ciresbot.log")
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
 # Data queue
 data_queue = queue.Queue()
+
 
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue.
@@ -253,7 +259,12 @@ def process_data():
     # Regular expression to find image paths
     while True:
         
-        data = data_queue.get().decode()
+        data = data_queue.get()
+
+        try:
+            data = data.decode("utf-8")
+        except UnicodeDecodeError:
+            data = data.decode("latin-1")
 
         if display_data:
             logger.log(logging.INFO, data)
@@ -264,25 +275,36 @@ def process_data():
         if '23,0,' in data:
             # Send Message
             msg = data.split('23,0,')[1]
-            bot.send_message(msg, group_id)
-            logger.log(logging.INFO, 'Mensaje enviado: ' + msg)
+            status_code = bot.send_message(msg, group_id)
+            if status_code != 200:
+                error_msg =  f"CiresBot {bot.name}\nFailed to send message. Status code: {status_code}"
+                logger.log(logging.WARNING, error_msg)
+                send_logs_telegram(errorbot, error_msg, errorgroup_id)
+            else:
+                logger.log(logging.INFO, 'Mensaje enviado: ' + msg)
 
         if '23,1,' in data or '23,2,' in data:
             # Send an image
             path = utils.extract_path(data)
             try:
-                bot.send_photo(path, group_id)
-                if '23,1' in data:
+                status_code = bot.send_photo(path, group_id)
+                if status_code != 200:
+                    error_msg = f"CiresBot {bot.name}\n.Failed to send photo. Status code: {status_code}"
+                    logger.log(logging.WARNING, error_msg)
+                elif '23,1' in data:
                     logger.log(logging.INFO, 'Mapa RACDMX enviado por Telegram\n')
                 else:
                     logger.log(logging.INFO, 'Mapa de sismo enviado por Telegram\n')
                 counter = 0
             except Exception as e:
                 if '23,1' in data:
-                    logger.log(logging.WARNING, 'Falló envio de mapa RACDMX\n')
+                    error_msg = 'Falló envio de mapa RACDMX\n'
+                    logger.log(logging.WARNING, error_msg)
                 else:
-                    logger.log(logging.WARNING, 'Falló envio mapa de sismo enviado por Telegram')
+                    error_msg = 'Falló envio mapa de sismo enviado por Telegram'
+                    logger.log(logging.WARNING, error_msg)
                 logger.log(logging.WARNING, e)
+                send_logs_telegram(errorbot, error_msg, errorgroup_id)
 
 
         if '23,3,' in data:
@@ -382,11 +404,17 @@ def watch_dog():
 
         # Check if threads are alive
         if not t1.is_alive():
-            logger.log(logging.WARNING, "Send message thread is dead")
+            error_msg = f"CiresBot {bot.name}\n.Send message thread is dead"
+            logger.log(logging.WARNING, error_msg)
+            send_logs_telegram(errorbot, error_msg, errorgroup_id)
         if not t2.is_alive():
-            logger.log(logging.WARNING, "Rcv message thread is dead")
+            error_msg = f"CiresBot {bot.name}\n.Rcv message thread is dead"
+            logger.log(logging.WARNING, error_msg)
+            send_logs_telegram(errorbot, error_msg, errorgroup_id)
         if not t3.is_alive():
-            logger.log(logging.WARNING, "Process data thread is dead")
+            error_msg = f"CiresBot {bot.name}\n.Process data thread is dead"
+            logger.log(logging.WARNING, error_msg)
+            send_logs_telegram(errorbot, error_msg, errorgroup_id)
         
 
 def main():
@@ -397,13 +425,13 @@ def main():
 
     """
     global app
-    global bot
+    global bot, errorbot
     global client_socket
     global connected
     global connection_failed
     global IP
     global PORT
-    global group_id
+    global group_id, errorgroup_id
     global group_name
     global t1, t2, t3
     
@@ -418,6 +446,9 @@ def main():
         PORT = 13384
 
     bot = telegramBot(bot_name, token)
+    errorbot = telegramBot.myassistant_bot() # Bot to send error messages
+    errorbot.load_all_groups()
+    errorgroup_id = errorbot.groups["grupo_prueba2"]
         
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
