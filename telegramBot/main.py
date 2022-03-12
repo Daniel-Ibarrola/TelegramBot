@@ -263,8 +263,10 @@ def process_data():
 
         try:
             data = data.decode("utf-8")
-        except UnicodeDecodeError:
-            data = data.decode("latin-1")
+        except Exception as exc:
+            logger.log(logging.WARNING, "Error decoding data.")
+            logger.log(logging.WARNING, exc)
+            continue
 
         if display_data:
             logger.log(logging.INFO, data)
@@ -291,14 +293,12 @@ def process_data():
                 if status_code != 200:
                     error_msg = f"CiresBot {bot.name}\n.Failed to send photo. Status code: {status_code}"
                     logger.log(logging.WARNING, error_msg)
-                elif '23,1' in data:
-                    logger.log(logging.INFO, 'Mapa RACDMX enviado por Telegram\n')
                 else:
                     logger.log(logging.INFO, 'Mapa de sismo enviado por Telegram\n')
                 counter = 0
             except Exception as e:
                 if '23,1' in data:
-                    error_msg = 'Falló envio de mapa RACDMX\n'
+                    error_msg = 'Falló envio de imagen\n'
                     logger.log(logging.WARNING, error_msg)
                 else:
                     error_msg = 'Falló envio mapa de sismo enviado por Telegram'
@@ -359,6 +359,10 @@ def watch_dog():
     global connection_failed
     global counter
     
+    check_thread_1 = True
+    check_thread_2 = True
+    check_thread_3 = True
+
     if not connection_failed:
         app.change_color()
 
@@ -403,18 +407,24 @@ def watch_dog():
         counter += 1
 
         # Check if threads are alive
-        if not t1.is_alive():
-            error_msg = f"CiresBot {bot.name}\n.Send message thread is dead"
-            logger.log(logging.WARNING, error_msg)
-            send_logs_telegram(errorbot, error_msg, errorgroup_id)
-        if not t2.is_alive():
-            error_msg = f"CiresBot {bot.name}\n.Rcv message thread is dead"
-            logger.log(logging.WARNING, error_msg)
-            send_logs_telegram(errorbot, error_msg, errorgroup_id)
-        if not t3.is_alive():
-            error_msg = f"CiresBot {bot.name}\n.Process data thread is dead"
-            logger.log(logging.WARNING, error_msg)
-            send_logs_telegram(errorbot, error_msg, errorgroup_id)
+        if check_thread_1:
+            if not t1.is_alive():
+                error_msg = f"CiresBot {bot.name}. Group {group_name}\n.Send message thread is dead."
+                logger.log(logging.WARNING, error_msg)
+                send_logs_telegram(errorbot, error_msg, errorgroup_id)
+                check_thread_1 = False
+        if check_thread_2:
+            if not t2.is_alive():
+                error_msg = f"CiresBot {bot.name}. Group {group_name}\n.Rcv message thread is dead."
+                logger.log(logging.WARNING, error_msg)
+                send_logs_telegram(errorbot, error_msg, errorgroup_id)
+                check_thread_2 = False
+        if check_thread_3:
+            if not t3.is_alive():
+                error_msg = f"CiresBot {bot.name}. Group {group_name}\n.Process data thread is dead."
+                logger.log(logging.WARNING, error_msg)
+                send_logs_telegram(errorbot, error_msg, errorgroup_id)
+                check_thread_3 = False
         
 
 def main():
