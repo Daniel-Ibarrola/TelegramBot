@@ -3,7 +3,11 @@ import subprocess
 
 
 env = os.environ.copy()
-env["config"] = "dev"
+env["bot"] = "test"
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
+bot_file = os.path.join(this_dir, "bot.csv")
+chat_file = os.path.join(this_dir, "chat.csv")
 
 
 def test_send_message():
@@ -11,8 +15,8 @@ def test_send_message():
         ["telegrambot", "message",
          "-b", "MyTestBot",
          "-c", "MyTestChat",
-         "-f", "./bot.csv",
-         "-cf", "./chats.csv",
+         "-f", bot_file,
+         "-cf", chat_file,
          "-m", "hello world"
          ],
         stdout=subprocess.PIPE,
@@ -25,14 +29,15 @@ def test_send_message():
 
 
 def test_send_photo():
+    photo_file = os.path.join(this_dir, "dog.jpg")
     result = subprocess.run(
         ["telegrambot", "photo",
          "-b", "MyTestBot",
          "-c", "MyTestChat",
-         "-f", "./bot.csv",
-         "-cf", "./chats.csv",
-         "-p", "./dog.jpg",
-         "-c", "Cute dog"
+         "-f", bot_file,
+         "-cf", chat_file,
+         "-p", photo_file,
+         "-cp", "Cute dog"
          ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -47,7 +52,7 @@ def test_get_updates():
     result = subprocess.run(
         ["telegrambot", "updates",
          "-b", "MyTestBot",
-         "-f", "./bot.csv",
+         "-f", bot_file
          ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
