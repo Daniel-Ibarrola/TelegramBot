@@ -1,11 +1,35 @@
 import abc
-import json
 import requests
-from typing import Union
+from typing import Any, Optional, Union
 
 
 class FakeResponse:
-    pass
+
+    def __init__(
+            self,
+            res_type: str = "updates",
+            files: Optional[dict[str, Any]] = None
+    ):
+        self.ok = True,
+        self.status_code = 200
+        self.res_type = res_type
+        self.files = files
+
+    def json(self) -> Any:
+        if self.res_type == "updates":
+            return {
+                "ok": True,
+                "result": [{"update_id": 1234}]
+            }
+        elif self.res_type == "message":
+            return {
+                "ok": True,
+                "result": {
+                    "text": "TestMessage"
+                }
+            }
+        else:
+            return {"ok": True}
 
 
 class AbstractBot(abc.ABC):
@@ -19,18 +43,48 @@ class AbstractBot(abc.ABC):
     def token(self) -> str:
         return self._token
 
-    def get_updates(self) -> tuple[bool, int, dict[str, any]]:
+    def get_updates(self) -> tuple[bool, int, list[dict]]:
         """ Get updates for the current bot.
         """
         url = self._base_url + "getUpdates?timeout=100"
-        res = self._get_request(url)
-        content = {}
+        res = self._get_request(url, "updates")
+        if res is None:
+            return False, 500, []
+        updates = {}
         if res.ok:
-            content = json.loads(res.content)
-        return res.ok, res.status_code, content
+            updates = res.json()["result"]
+        return res.ok, res.status_code, updates
+
+    def send_message(self, msg: str, chat_id: str) -> tuple[bool, int, str]:
+        """ Send a message to the specified chat.
+        """
+        url = f"{self._base_url}sendMessage?chat_id={chat_id}&text={msg}"
+        res = self._get_request(url, "message")
+        if res is None:
+            return False, 500, ""
+        message = ""
+        if res.ok:
+            message = res.json()["result"]["text"]
+        return res.ok, res.status_code, message
+
+    def send_photo(
+            self,
+            photo_path: str,
+            chat_id: str,
+            caption: str = "") -> tuple[bool, int, str]:
+        url = f"{self._base_url}sendPhoto?chat_id={chat_id}"
+        if caption:
+            url += f"&caption={caption}"
+
+        with open(photo_path, "rb") as fp:
+            res = self._post_request(url, {"photo": fp})
+
+        if res is None:
+            return False, 500, ""
+        return res.ok, res.status_code, photo_path
 
     @abc.abstractmethod
-    def _post_request(self, url: str, *args) -> Union[requests.Response, FakeResponse]:
+    def _post_request(self, url: str, files: dict[str, Any]) -> Union[requests.Response, FakeResponse]:
         pass
 
     @abc.abstractmethod
@@ -42,11 +96,17 @@ class TelegramBot(AbstractBot):
     """ Class to interact with the telegram bot API.
     """
 
-    def _post_request(self, url: str, *args) -> requests.Response:
-        pass
+    def _post_request(self, url: str, files: dict[str, Any]) -> Optional[requests.Response]:
+        try:
+            return requests.post(url, files=files)
+        except requests.ConnectionError:
+            return
 
-    def _get_request(self, url: str, *args) -> requests.Response:
-        pass
+    def _get_request(self, url: str, *args) -> Optional[requests.Response]:
+        try:
+            return requests.get(url)
+        except requests.ConnectionError:
+            return
 
 
 class TestBot(AbstractBot):
@@ -54,8 +114,8 @@ class TestBot(AbstractBot):
         to telegram API.
     """
 
-    def _post_request(self, url: str, *args) -> FakeResponse:
-        pass
+    def _post_request(self, url: str, files: dict[str, Any]) -> FakeResponse:
+        return FakeResponse("photo", files)
 
     def _get_request(self, url: str, *args) -> FakeResponse:
-        pass
+        return FakeResponse(args[0])
