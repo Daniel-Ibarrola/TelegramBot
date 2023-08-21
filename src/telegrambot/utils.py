@@ -36,7 +36,7 @@ def get_bot(name: str, is_token: bool, file: str) -> Union[TestBot, TelegramBot,
 
 
 def get_chat_id(
-        chat_name: str, file: str, is_id: bool = False, bot_name: str = ""
+        chat_name: str, file: str = "", is_id: bool = False, bot_name: str = ""
 ) -> str:
     if not is_id:
         with open(file) as fp:

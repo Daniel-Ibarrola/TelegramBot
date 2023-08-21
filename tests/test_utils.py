@@ -38,18 +38,18 @@ class TestGetBotToken:
 class TestGetChatID:
 
     def test_id_is_passed(self):
-        chat_id = utils.get_chat_id("TestID", True, "")
+        chat_id = utils.get_chat_id("TestID", "", True)
         assert chat_id == "TestID"
 
     def test_finds_id_with_chat_name(self):
         file = os.path.join(this_dir, "chat.csv")
         chat_id = utils.get_chat_id(
-            "MyTestChat", False, file, "MyTestBot")
+            "MyTestChat", file, bot_name="MyTestBot")
         assert chat_id == "12345"
 
     def test_returns_empty_if_bot_does_not_belong_to_chat(self):
         file = os.path.join(this_dir, "chat.csv")
         chat_id = utils.get_chat_id(
-            "MyTestChat", False, file, "OtherBot")
+            "MyTestChat", file, bot_name="OtherBot")
         assert chat_id == ""
 
