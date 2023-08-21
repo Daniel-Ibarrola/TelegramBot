@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.1
+- Fixed bugs in tests in TestGetChatID. 
+- Dev requirements includes common as well.
+
 ## v0.1.0
 
 Initial release. Can send messages and photos through Telegram.
