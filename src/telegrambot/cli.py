@@ -54,7 +54,8 @@ def create_parser() -> argparse.PARSER:
     subparsers = parser.add_subparsers(
         dest="mode",
         help="Choose what you want to do with your bot.\nValid arguments are:"
-             "message, photo, updates."
+             "message, photo, updates.",
+        required=True
     )
     message_parser = subparsers.add_parser(
         "message",

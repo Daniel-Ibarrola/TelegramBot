@@ -3,6 +3,7 @@
 dist/
 venv/
 temp/
+data/
 
 __pycache__
 *.pyc

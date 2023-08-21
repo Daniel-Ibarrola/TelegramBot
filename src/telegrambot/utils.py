@@ -73,7 +73,7 @@ def send_message(
     bot_name = bot if not is_token else ""
     chat_id = get_chat_id(chat, is_id, chat_file, bot_name)
     if not chat_id:
-        print(f"Failed to find chat id of {chat}.")
+        print(f"Failed to find chat id of {chat}")
         sys.exit(1)
 
     success, status_code, message = telegram_bot.send_message(message, chat_id)
