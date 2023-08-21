@@ -81,7 +81,7 @@ def send_message(
         print(f"Failed to send message. Status code {status_code}")
         sys.exit(1)
 
-    print(f"Message send successfully: {message}")
+    print(f"Message sent successfully: {message}")
 
 
 def send_photo(
@@ -105,11 +105,11 @@ def send_photo(
         print(f"Failed to find chat id of {chat}.")
         sys.exit(1)
 
-    success, status_code = telegram_bot.send_photo(photo_path, chat_id, caption)
+    success, status_code, photo_path = telegram_bot.send_photo(photo_path, chat_id, caption)
     if not success:
         print(f"Failed to send photo. Status code {status_code}")
         sys.exit(1)
-    print(f"Photo send successfully: {photo_path}")
+    print(f"Photo sent successfully: {photo_path}")
 
 
 def get_updates(

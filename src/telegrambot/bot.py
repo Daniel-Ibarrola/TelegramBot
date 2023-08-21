@@ -8,12 +8,14 @@ class FakeResponse:
     def __init__(
             self,
             res_type: str = "updates",
-            files: Optional[dict[str, Any]] = None
+            files: Optional[dict[str, Any]] = None,
+            msg: str = ""
     ):
         self.ok = True,
         self.status_code = 200
         self.res_type = res_type
         self.files = files
+        self.msg = msg
 
     def json(self) -> Any:
         if self.res_type == "updates":
@@ -25,7 +27,7 @@ class FakeResponse:
             return {
                 "ok": True,
                 "result": {
-                    "text": "TestMessage"
+                    "text": self.msg
                 }
             }
         else:
@@ -118,4 +120,5 @@ class TestBot(AbstractBot):
         return FakeResponse("photo", files)
 
     def _get_request(self, url: str, *args) -> FakeResponse:
-        return FakeResponse(args[0])
+        msg = url.split("text=")[-1]
+        return FakeResponse(args[0], msg=msg)
