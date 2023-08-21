@@ -1,3 +1,4 @@
+-r common.txt
 bumpver==2023.1126
 pytest==7.4.0
 pytest-mock==3.11.1
