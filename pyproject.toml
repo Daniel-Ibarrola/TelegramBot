@@ -3,11 +3,12 @@
 [build-system]
 requires      = [
     "setuptools>=65.5.0",
+    "requests>=2.31.0"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "telegram-bot"
+name = "telegrambot"
 version = "0.0.0"
 description = "Telegram bot"
 readme = "README.md"
