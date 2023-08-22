@@ -17,6 +17,10 @@ def test_send_message():
     assert status_code == 200
     assert message == "TestMessage"
 
+    assert len(bot.responses) == 1
+    res = bot.responses[0].json()
+    assert res["result"]["text"] == "TestMessage"
+
 
 def test_send_photo():
     this_dir = os.path.dirname(os.path.abspath(__file__))

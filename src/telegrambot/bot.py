@@ -115,10 +115,17 @@ class TestBot(AbstractBot):
     """ Class used for testing purposes. Doesn't send requests
         to telegram API.
     """
+    def __init__(self, token: str, name: str = ""):
+        super().__init__(token, name)
+        self.responses = []  # type: list[FakeResponse]
 
     def _post_request(self, url: str, files: dict[str, Any]) -> FakeResponse:
-        return FakeResponse("photo", files)
+        res = FakeResponse("photo", files)
+        self.responses.append(res)
+        return res
 
     def _get_request(self, url: str, *args) -> FakeResponse:
         msg = url.split("text=")[-1]
-        return FakeResponse(args[0], msg=msg)
+        res = FakeResponse(args[0], msg=msg)
+        self.responses.append(res)
+        return res

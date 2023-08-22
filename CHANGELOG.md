@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.0
+TestBot stores responses 
+
 ## v0.1.1
 - Fixed bugs in tests in TestGetChatID. 
 - Dev requirements includes common as well.
