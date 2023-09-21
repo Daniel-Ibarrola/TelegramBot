@@ -1,6 +1,10 @@
 # Changelog
 
 ## v0.2.0
+Project name is ciresbot on pypi. Import works as usual.
+Can install from pip.
+
+## v0.1.2
 TestBot stores responses 
 
 ## v0.1.1

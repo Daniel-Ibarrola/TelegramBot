@@ -115,6 +115,8 @@ class TestBot(AbstractBot):
     """ Class used for testing purposes. Doesn't send requests
         to telegram API.
     """
+    __test__ = False  # Prevent pytest from treating it like a test class
+
     def __init__(self, token: str, name: str = ""):
         super().__init__(token, name)
         self.responses = []  # type: list[FakeResponse]
