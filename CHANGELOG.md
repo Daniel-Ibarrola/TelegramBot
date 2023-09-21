@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.1
+Fixed script error on pyproject.toml
+
 ## v0.2.0
 Project name is ciresbot on pypi. Import works as usual.
 Can install from pip.

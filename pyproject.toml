@@ -27,7 +27,7 @@ dev = ["bumpver", "pytest"]
 Homepage = "https://github.com/Daniel-Ibarrola/TelegramBot.git"
 
 [project.scripts]
-telegrambot = "ciresbot.__main__:main"
+telegrambot = "telegrambot.__main__:main"
 
 [tool.bumpver]
 current_version = "0.2.0"
