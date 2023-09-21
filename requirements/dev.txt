@@ -1,4 +1,5 @@
 -r common.txt
+build==1.0.3
 bumpver==2023.1126
 pytest==7.4.0
 pytest-mock==3.11.1
