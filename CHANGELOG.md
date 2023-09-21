@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.2
+Added build to dependencies, for CD action.
+
 ## v0.2.1
 Fixed script error on pyproject.toml
 
