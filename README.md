@@ -8,7 +8,7 @@ and photos.
 Install with pip
 
 ```
-pip install "git+https://github.com/Daniel-Ibarrola/TelegramBot#egg=telegrambot"
+pip install ciresbot
 ```
 
 ## Usage
