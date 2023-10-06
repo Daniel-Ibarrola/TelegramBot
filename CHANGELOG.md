@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.3
+`TestBot.send_photo` does not open files.
+
 ## v0.2.2
 Added build to dependencies, for CD action.
 

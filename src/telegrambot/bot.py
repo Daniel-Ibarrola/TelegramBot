@@ -11,7 +11,7 @@ class FakeResponse:
             files: Optional[dict[str, Any]] = None,
             msg: str = ""
     ):
-        self.ok = True,
+        self.ok = True
         self.status_code = 200
         self.res_type = res_type
         self.files = files
@@ -131,3 +131,19 @@ class TestBot(AbstractBot):
         res = FakeResponse(args[0], msg=msg)
         self.responses.append(res)
         return res
+
+    def send_photo(
+            self,
+            photo_path: str,
+            chat_id: str,
+            caption: str = "") -> tuple[bool, int, str]:
+        url = f"{self._base_url}sendPhoto?chat_id={chat_id}"
+        if caption:
+            url += f"&caption={caption}"
+
+        res = self._post_request(url, {"photo": photo_path})
+
+        if res is None:
+            return False, 500, ""
+
+        return res.ok, res.status_code, photo_path
