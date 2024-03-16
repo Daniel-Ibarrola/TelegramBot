@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.4
+
+1. TelegramBot encodes text messages to prevent data loss.
+2. Url is a parameter with default value for TelegramBot.
+3. Formatted code with black.
+
+
 ## v0.2.3
 `TestBot.send_photo` does not open files.
 

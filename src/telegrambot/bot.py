@@ -1,6 +1,8 @@
 import abc
-import requests
 from typing import Any, Optional, Union
+from urllib.parse import quote, unquote
+
+import requests
 
 
 class FakeResponse:
@@ -52,7 +54,7 @@ class AbstractBot(abc.ABC):
 
     def send_message(self, msg: str, chat_id: str) -> tuple[bool, int, str]:
         """Send a message to the specified chat."""
-        url = f"{self._base_url}sendMessage?chat_id={chat_id}&text={msg}"
+        url = f"{self._base_url}sendMessage?chat_id={chat_id}&text={quote(msg)}"
         res = self._get_request(url, "message")
         if res is None:
             return False, 500, ""
@@ -122,7 +124,7 @@ class TestBot(AbstractBot):
 
     def _get_request(self, url: str, *args) -> FakeResponse:
         msg = url.split("text=")[-1]
-        res = FakeResponse(args[0], msg=msg)
+        res = FakeResponse(args[0], msg=unquote(msg))
         self.responses.append(res)
         return res
 
