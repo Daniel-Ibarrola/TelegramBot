@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ciresbot"
-version = "0.2.3"
+version = "0.2.4"
 description = "Telegram bot"
 readme = "README.md"
 authors = [{ name = "Daniel Ibarrola", email = "daniel.ibarrola.sanchez@gmail.com" }]
@@ -30,7 +30,7 @@ Homepage = "https://github.com/Daniel-Ibarrola/TelegramBot.git"
 telegrambot = "telegrambot.__main__:main"
 
 [tool.bumpver]
-current_version = "0.2.3"
+current_version = "0.2.4"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
